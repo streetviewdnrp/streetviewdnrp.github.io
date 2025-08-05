@@ -1,0 +1,37 @@
+{
+  "spawn": {
+    "image": "images/spawn.jpg",
+    "hotspots": [
+      {
+        "pitch": 0,
+        "yaw": 90,
+        "target": "street1"
+      }
+    ]
+  },
+  "street1": {
+    "image": "images/street1.jpg",
+    "hotspots": [
+      {
+        "pitch": 0,
+        "yaw": -90,
+        "target": "spawn"
+      },
+      {
+        "pitch": 0,
+        "yaw": 90,
+        "target": "street2"
+      }
+    ]
+  },
+  "street2": {
+    "image": "images/street2.jpg",
+    "hotspots": [
+      {
+        "pitch": 0,
+        "yaw": -90,
+        "target": "street1"
+      }
+    ]
+  }
+}
