@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Roblox 360 StreetView</title>
+  <style>
+    html, body {
+      margin: 0;
+      height: 100%;
+      overflow: hidden;
+    }
+    #panorama {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css" />
+</head>
+<body>
+  <div id="panorama"></div>
+
+  <script>
+    let currentScene = "spawn";
+    let sceneData = {};
+
+    async function loadHotspots() {
+      const res = await fetch("hotspots.json");
+      sceneData = await res.json();
+      loadScene(currentScene);
+    }
+
+    function loadScene(sceneName) {
+      const data = sceneData[sceneName];
+      if (!data) return;
+
+      const config = {
+        type: "equirectangular",
+        panorama: data.image,
+        autoLoad: true,
+        hotSpots: data.hotspots.map(h => ({
+          pitch: h.pitch,
+          yaw: h.yaw,
+          type: "scene",
+          text: `Go to ${h.target}`,
+          sceneId: h.target,
+          clickHandlerFunc: () => {
+            currentScene = h.target;
+            loadScene(h.target);
+          }
+        }))
+      };
+
+      pannellum.viewer("panorama", config);
+    }
+
+    loadHotspots();
+  </script>
+</body>
+</html>
