@@ -1,61 +1,135 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Roblox 360 StreetView</title>
-  <style>
-    html, body {
-      margin: 0;
-      height: 100%;
-      overflow: hidden;
-    }
-    #panorama {
-      width: 100%;
-      height: 100%;
-    }
-  </style>
-  <script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css" />
-</head>
-<body>
-  <div id="panorama"></div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Roblox 360 StreetView</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+        background-color: black;
+      }
 
-  <script>
-    let currentScene = "spawn";
-    let sceneData = {};
+      #panorama {
+        width: 100%;
+        height: 100%;
+      }
 
-    async function loadHotspots() {
-      const res = await fetch("hotspots.json");
-      sceneData = await res.json();
-      loadScene(currentScene);
-    }
+      .pnlm-hotspot-base {
+        transition: transform 0.2s;
+      }
 
-    function loadScene(sceneName) {
-      const data = sceneData[sceneName];
-      if (!data) return;
+      .pnlm-hotspot-base:hover {
+        transform: scale(1.2);
+      }
 
-      const config = {
-        type: "equirectangular",
-        panorama: data.image,
-        autoLoad: true,
-        hotSpots: data.hotspots.map(h => ({
+      .custom-tooltip {
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 5px 10px;
+        border-radius: 8px;
+        font-size: 14px;
+        white-space: nowrap;
+      }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css"
+    />
+  </head>
+  <body>
+    <div id="panorama"></div>
+
+    <script>
+      let viewer;
+      let sceneData = {};
+      let currentScene = "spawn";
+
+      async function loadData() {
+        const res = await fetch("hotspots.json");
+        sceneData = await res.json();
+        initViewer();
+      }
+
+      function preloadImage(src) {
+        const img = new Image();
+        img.src = src;
+      }
+
+      function initViewer() {
+        viewer = pannellum.viewer("panorama", {
+          type: "equirectangular",
+          panorama: sceneData[currentScene].image,
+          autoLoad: true,
+          showZoomCtrl: true,
+          showFullscreenCtrl: true,
+          showControls: true,
+          hfov: 110,
+          pitch: 0,
+          yaw: 0,
+          compass: false,
+          hotSpots: generateHotspots(currentScene),
+        });
+
+        // Preload connected images
+        preloadNextImages(currentScene);
+      }
+
+      function preloadNextImages(sceneName) {
+        const hs = sceneData[sceneName].hotspots;
+        hs.forEach((h) => {
+          const next = sceneData[h.target];
+          if (next) preloadImage(next.image);
+        });
+      }
+
+      function generateHotspots(sceneName) {
+        const hs = sceneData[sceneName].hotspots || [];
+        return hs.map((h) => ({
           pitch: h.pitch,
           yaw: h.yaw,
-          type: "scene",
-          text: `Go to ${h.target}`,
-          sceneId: h.target,
-          clickHandlerFunc: () => {
-            currentScene = h.target;
-            loadScene(h.target);
-          }
-        }))
-      };
+          type: "custom",
+          cssClass: "custom-hotspot",
+          createTooltipFunc: hotspotTooltip,
+          createTooltipArgs: h.tooltip || h.target,
+          clickHandlerFunc: () => switchScene(h.target),
+        }));
+      }
 
-      pannellum.viewer("panorama", config);
-    }
+      function hotspotTooltip(hotSpotDiv, args) {
+        const tooltip = document.createElement("div");
+        tooltip.classList.add("custom-tooltip");
+        tooltip.innerText = args;
+        hotSpotDiv.appendChild(tooltip);
+      }
 
-    loadHotspots();
-  </script>
-</body>
+      function switchScene(sceneName) {
+        const scene = sceneData[sceneName];
+        if (!scene) return;
+
+        // Optional: smooth zoom out + fade
+        viewer.setHfov(150);
+        viewer.fadeOut(500, () => {
+          viewer.loadScene({
+            type: "equirectangular",
+            panorama: scene.image,
+            hotSpots: generateHotspots(sceneName),
+            pitch: 0,
+            yaw: 0,
+            hfov: 110,
+            autoLoad: true,
+          });
+          currentScene = sceneName;
+          preloadNextImages(sceneName);
+          viewer.fadeIn(500);
+        });
+      }
+
+      loadData();
+    </script>
+  </body>
 </html>

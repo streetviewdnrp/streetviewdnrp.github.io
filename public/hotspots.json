@@ -5,7 +5,8 @@
       {
         "pitch": 0,
         "yaw": 90,
-        "target": "street1"
+        "target": "street1",
+        "tooltip": "Naar straat 1"
       }
     ]
   },
@@ -15,12 +16,14 @@
       {
         "pitch": 0,
         "yaw": -90,
-        "target": "spawn"
+        "target": "spawn",
+        "tooltip": "Terug naar spawn"
       },
       {
         "pitch": 0,
         "yaw": 90,
-        "target": "street2"
+        "target": "street2",
+        "tooltip": "Verder naar straat 2"
       }
     ]
   },
@@ -30,7 +33,8 @@
       {
         "pitch": 0,
         "yaw": -90,
-        "target": "street1"
+        "target": "street1",
+        "tooltip": "Terug naar straat 1"
       }
     ]
   }
